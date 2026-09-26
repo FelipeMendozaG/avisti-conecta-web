@@ -1,0 +1,119 @@
+<div class="space-y-6">
+  <div>
+    <a
+      routerLink="/panel/solicitudes"
+      class="inline-flex items-center gap-1 text-sm font-medium text-slate-500 transition hover:text-slate-700"
+    >
+      ← Volver a solicitudes
+    </a>
+  </div>
+
+  @if (loading()) {
+    <app-skeleton variant="detail" />
+  } @else if (error()) {
+    <app-error-state
+      [message]="error() ?? ''"
+      [withRetry]="false"
+      (retry)="load()"
+    >
+      <a
+        routerLink="/panel/solicitudes"
+        class="mt-2 rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white"
+      >
+        Volver al listado
+      </a>
+    </app-error-state>
+  } @else if (request(); as current) {
+    <!-- Encabezado -->
+    <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
+        <div>
+          <div class="flex flex-wrap items-center gap-2">
+            <h1 class="text-2xl font-bold tracking-tight text-slate-900">
+              Solicitud #{{ current.request_id }}
+            </h1>
+            <app-status-badge kind="request-type" [value]="current.request_type" />
+            <app-status-badge kind="request-status" [value]="current.request_status" />
+          </div>
+          <p class="mt-1 text-sm text-slate-500">
+            Creada el {{ current.request_date | date: 'dd/MM/yyyy HH:mm' }}
+          </p>
+        </div>
+
+        @if (current.request_status === 'ON_HOLD') {
+          <div class="rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            Tu solicitud está en revisión. Te notificaremos cuando sea aprobada.
+          </div>
+        }
+      </div>
+
+      <dl class="mt-6 grid gap-4 border-t border-slate-100 pt-5 sm:grid-cols-3">
+        <div>
+          <dt class="text-xs font-medium uppercase tracking-wide text-slate-500">Cantidad</dt>
+          <dd class="mt-1 text-lg font-semibold text-slate-900">
+            {{ current.requested_quantity }} unidades
+          </dd>
+        </div>
+        <div>
+          <dt class="text-xs font-medium uppercase tracking-wide text-slate-500">Entidad</dt>
+          <dd class="mt-1 text-lg font-semibold text-slate-900">#{{ current.entity_id }}</dd>
+        </div>
+        <div>
+          <dt class="text-xs font-medium uppercase tracking-wide text-slate-500">Asignaciones</dt>
+          <dd class="mt-1 text-lg font-semibold text-slate-900">
+            {{ current.assignments.length }}
+          </dd>
+        </div>
+      </dl>
+
+      <div class="mt-5 rounded-xl bg-slate-50 p-4">
+        <p class="text-xs font-medium uppercase tracking-wide text-slate-500">
+          Descripción de la necesidad
+        </p>
+        <p class="mt-1.5 whitespace-pre-line text-sm leading-relaxed text-slate-700">
+          {{ current.need_description }}
+        </p>
+      </div>
+    </div>
+
+    <!-- Asignaciones generadas -->
+    <section class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <h2 class="text-base font-semibold text-slate-900">Equipos asignados</h2>
+
+      @if (current.assignments.length === 0) {
+        <app-empty-state
+          title="Sin asignaciones todavía"
+          message="Cuando la solicitud sea aprobada, los equipos asignados aparecerán aquí."
+        />
+      } @else {
+        <ul class="mt-4 space-y-3">
+          @for (assignment of current.assignments; track assignment.assignment_id) {
+            <li>
+              <a
+                [routerLink]="['/panel/asignaciones', assignment.assignment_id]"
+                class="flex flex-col gap-3 rounded-xl border border-slate-200 p-4 transition hover:border-emerald-300 hover:bg-emerald-50/40 sm:flex-row sm:items-center sm:justify-between"
+              >
+                <div class="min-w-0">
+                  <p class="truncate text-sm font-semibold text-slate-900">
+                    #{{ assignment.assignment_id }} ·
+                    {{ assignment.equipment?.product.name ?? 'Equipo' }}
+                  </p>
+                  <p class="mt-0.5 text-xs text-slate-500">
+                    Serie
+                    {{ assignment.equipment?.serial_number ?? '—' }} · Entrega
+                    {{
+                      assignment.delivery_date
+                        ? (assignment.delivery_date | date: 'dd/MM/yyyy')
+                        : 'pendiente'
+                    }}
+                  </p>
+                </div>
+                <span class="shrink-0 text-sm font-medium text-emerald-700">Ver detalle →</span>
+              </a>
+            </li>
+          }
+        </ul>
+      }
+    </section>
+  }
+</div>

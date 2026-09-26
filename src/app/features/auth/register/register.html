@@ -1,0 +1,117 @@
+<app-auth-shell>
+  <div class="text-center">
+    <h1 class="text-2xl font-bold tracking-tight text-slate-900">Crea tu cuenta</h1>
+    <p class="mt-2 text-sm text-slate-500">
+      Regístrate para gestionar donaciones y convenios de tu entidad.
+    </p>
+  </div>
+
+  @if (serverError()) {
+    <div
+      class="mt-6 flex items-start gap-3 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700"
+      role="alert"
+    >
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="mt-0.5 h-5 w-5 shrink-0" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0 3.75h.008v.008H12v-.008z" />
+      </svg>
+      <span>{{ serverError() }}</span>
+    </div>
+  }
+
+  <form class="mt-6 space-y-5" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    <div>
+      <label for="register-name" class="mb-1.5 block text-sm font-medium text-slate-700">
+        Nombre de la entidad o usuario
+      </label>
+      <input
+        id="register-name"
+        type="text"
+        autocomplete="organization"
+        formControlName="name"
+        class="w-full rounded-xl border px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2"
+        [class]="controlError('name') ? borderInvalid : borderValid"
+        placeholder="ONG Avisti Perú"
+      />
+      @if (controlError('name'); as error) {
+        <p class="mt-1.5 text-xs text-rose-600">{{ error }}</p>
+      }
+    </div>
+
+    <div>
+      <label for="register-email" class="mb-1.5 block text-sm font-medium text-slate-700">
+        Correo electrónico
+      </label>
+      <input
+        id="register-email"
+        type="email"
+        autocomplete="email"
+        formControlName="email"
+        class="w-full rounded-xl border px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2"
+        [class]="controlError('email') ? borderInvalid : borderValid"
+        placeholder="tu@organizacion.org"
+      />
+      @if (controlError('email'); as error) {
+        <p class="mt-1.5 text-xs text-rose-600">{{ error }}</p>
+      }
+    </div>
+
+    <div>
+      <label for="register-password" class="mb-1.5 block text-sm font-medium text-slate-700">
+        Contraseña
+      </label>
+      <input
+        id="register-password"
+        type="password"
+        autocomplete="new-password"
+        formControlName="password"
+        class="w-full rounded-xl border px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2"
+        [class]="controlError('password') ? borderInvalid : borderValid"
+        placeholder="Mínimo 6 caracteres"
+      />
+      @if (controlError('password'); as error) {
+        <p class="mt-1.5 text-xs text-rose-600">{{ error }}</p>
+      }
+    </div>
+
+    <div>
+      <label for="register-confirm" class="mb-1.5 block text-sm font-medium text-slate-700">
+        Confirmar contraseña
+      </label>
+      <input
+        id="register-confirm"
+        type="password"
+        autocomplete="new-password"
+        formControlName="confirmPassword"
+        class="w-full rounded-xl border px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2"
+        [class]="controlError('confirmPassword') ? borderInvalid : borderValid"
+        placeholder="Repite tu contraseña"
+      />
+      @if (controlError('confirmPassword'); as error) {
+        <p class="mt-1.5 text-xs text-rose-600">{{ error }}</p>
+      }
+    </div>
+
+    <button
+      type="submit"
+      class="flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+      [disabled]="loading()"
+    >
+      @if (loading()) {
+        <span
+          class="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white"
+          aria-hidden="true"
+        ></span>
+        Creando cuenta…
+      } @else {
+        Crear cuenta
+      }
+    </button>
+  </form>
+
+  <span footer>
+    ¿Ya tienes cuenta?
+    <a routerLink="/ingresar" class="font-medium text-emerald-700 hover:text-emerald-800">
+      Inicia sesión
+    </a>
+  </span>
+</app-auth-shell>

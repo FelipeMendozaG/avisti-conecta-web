@@ -1,0 +1,16 @@
+# Archivos excluidos del despliegue a App Engine.
+# node_modules/ y dist/ se generan en el servidor:
+# `npm install` + script "gcp-build" (ng build) durante `gcloud app deploy`.
+.gcloudignore
+.git/
+.gitignore
+.github/
+.vscode/
+node_modules/
+dist/
+coverage/
+e2e/
+*.log
+*.orig
+.DS_Store
+Thumbs.db

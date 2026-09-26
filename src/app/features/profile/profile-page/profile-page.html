@@ -1,0 +1,269 @@
+<div class="space-y-6">
+  <div>
+    <h1 class="text-2xl font-bold tracking-tight text-slate-900">Perfil institucional</h1>
+    <p class="mt-1 text-sm text-slate-500">
+      Datos corporativos de tu entidad. Se usan para verificar tu cuenta y procesar solicitudes.
+    </p>
+  </div>
+
+  @if (mode() === 'loading') {
+    <app-skeleton variant="detail" />
+  } @else if (mode() === 'error') {
+    <app-error-state [message]="loadError() ?? ''" (retry)="load()" />
+  } @else if (mode() === 'view' && entity(); as current) {
+    <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
+        <div class="flex items-center gap-4">
+          <span
+            class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-emerald-100 text-xl font-bold uppercase text-emerald-700"
+          >
+            {{ current.company_name.charAt(0) }}
+          </span>
+          <div>
+            <h2 class="text-lg font-semibold text-slate-900">{{ current.company_name }}</h2>
+            <p class="text-sm text-slate-500">
+              {{ current.entity_type }} · Registrada el
+              {{ current.registration_date | date: 'dd/MM/yyyy' }}
+            </p>
+          </div>
+        </div>
+        <div class="flex items-center gap-3">
+          <app-status-badge kind="verification" [value]="current.verification_status" />
+          <button
+            type="button"
+            class="inline-flex items-center justify-center rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700"
+            (click)="startEdit()"
+          >
+            Editar datos
+          </button>
+        </div>
+      </div>
+
+      @if (current.verification_status === 'PENDING') {
+        <p class="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+          Tu perfil está pendiente de verificación. Nuestro equipo revisará la información en breve.
+        </p>
+      }
+
+      <dl class="mt-6 grid gap-5 border-t border-slate-100 pt-5 sm:grid-cols-2 lg:grid-cols-3">
+        <div>
+          <dt class="text-xs font-medium uppercase tracking-wide text-slate-500">RUC / DNI</dt>
+          <dd class="mt-1 text-sm font-medium text-slate-900">{{ current.tax_id }}</dd>
+        </div>
+        <div>
+          <dt class="text-xs font-medium uppercase tracking-wide text-slate-500">Dirección</dt>
+          <dd class="mt-1 text-sm font-medium text-slate-900">{{ current.address }}</dd>
+        </div>
+        <div>
+          <dt class="text-xs font-medium uppercase tracking-wide text-slate-500">
+            Persona de contacto
+          </dt>
+          <dd class="mt-1 text-sm font-medium text-slate-900">{{ current.contact_name }}</dd>
+        </div>
+        <div>
+          <dt class="text-xs font-medium uppercase tracking-wide text-slate-500">
+            Correo de contacto
+          </dt>
+          <dd class="mt-1 text-sm font-medium text-slate-900">{{ current.contact_email }}</dd>
+        </div>
+        <div>
+          <dt class="text-xs font-medium uppercase tracking-wide text-slate-500">Teléfono</dt>
+          <dd class="mt-1 text-sm font-medium text-slate-900">{{ current.contact_phone }}</dd>
+        </div>
+        <div>
+          <dt class="text-xs font-medium uppercase tracking-wide text-slate-500">ID de entidad</dt>
+          <dd class="mt-1 text-sm font-medium text-slate-900">{{ current.entity_id }}</dd>
+        </div>
+      </dl>
+    </div>
+  } @else {
+    <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <h2 class="text-lg font-semibold text-slate-900">
+        @if (mode() === 'edit') {
+          Editar información institucional
+        } @else {
+          Completa tu perfil institucional
+        }
+      </h2>
+      <p class="mt-1 text-sm text-slate-500">
+        @if (mode() === 'edit') {
+          Actualiza los datos corporativos de tu entidad.
+        } @else {
+          Aún no has registrado los datos de tu entidad. Completa el formulario para iniciar tu
+          onboarding.
+        }
+      </p>
+
+      @if (serverError()) {
+        <div
+          class="mt-4 flex items-start gap-3 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700"
+          role="alert"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="mt-0.5 h-5 w-5 shrink-0" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0 3.75h.008v.008H12v-.008z" />
+          </svg>
+          <span>{{ serverError() }}</span>
+        </div>
+      }
+
+      <form class="mt-6 space-y-5" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+        <div class="grid gap-5 sm:grid-cols-2">
+          <div>
+            <label for="entity-tax-id" class="mb-1.5 block text-sm font-medium text-slate-700">
+              RUC / DNI
+            </label>
+            <input
+              id="entity-tax-id"
+              type="text"
+              formControlName="tax_id"
+              class="w-full rounded-xl border px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2"
+              [class]="controlError('tax_id') ? borderInvalid : borderValid"
+              placeholder="20123456789"
+            />
+            @if (controlError('tax_id'); as error) {
+              <p class="mt-1.5 text-xs text-rose-600">{{ error }}</p>
+            }
+          </div>
+
+          <div>
+            <label for="entity-type" class="mb-1.5 block text-sm font-medium text-slate-700">
+              Tipo de entidad
+            </label>
+            <select
+              id="entity-type"
+              formControlName="entity_type"
+              class="w-full rounded-xl border px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2"
+              [class]="controlError('entity_type') ? borderInvalid : borderValid"
+            >
+              @for (type of entityTypes; track type) {
+                <option [value]="type">{{ type }}</option>
+              }
+            </select>
+            @if (controlError('entity_type'); as error) {
+              <p class="mt-1.5 text-xs text-rose-600">{{ error }}</p>
+            }
+          </div>
+        </div>
+
+        <div>
+          <label for="entity-name" class="mb-1.5 block text-sm font-medium text-slate-700">
+            Razón social / nombre
+          </label>
+          <input
+            id="entity-name"
+            type="text"
+            formControlName="company_name"
+            class="w-full rounded-xl border px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2"
+            [class]="controlError('company_name') ? borderInvalid : borderValid"
+            placeholder="ONG Avisti Perú"
+          />
+          @if (controlError('company_name'); as error) {
+            <p class="mt-1.5 text-xs text-rose-600">{{ error }}</p>
+          }
+        </div>
+
+        <div>
+          <label for="entity-address" class="mb-1.5 block text-sm font-medium text-slate-700">
+            Dirección
+          </label>
+          <input
+            id="entity-address"
+            type="text"
+            formControlName="address"
+            class="w-full rounded-xl border px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2"
+            [class]="controlError('address') ? borderInvalid : borderValid"
+            placeholder="Av. Los Próceres 1234, Lima"
+          />
+          @if (controlError('address'); as error) {
+            <p class="mt-1.5 text-xs text-rose-600">{{ error }}</p>
+          }
+        </div>
+
+        <div class="grid gap-5 sm:grid-cols-2">
+          <div>
+            <label for="entity-contact-name" class="mb-1.5 block text-sm font-medium text-slate-700">
+              Persona de contacto
+            </label>
+            <input
+              id="entity-contact-name"
+              type="text"
+              formControlName="contact_name"
+              class="w-full rounded-xl border px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2"
+              [class]="controlError('contact_name') ? borderInvalid : borderValid"
+              placeholder="María Quispe"
+            />
+            @if (controlError('contact_name'); as error) {
+              <p class="mt-1.5 text-xs text-rose-600">{{ error }}</p>
+            }
+          </div>
+
+          <div>
+            <label for="entity-contact-phone" class="mb-1.5 block text-sm font-medium text-slate-700">
+              Teléfono
+            </label>
+            <input
+              id="entity-contact-phone"
+              type="tel"
+              formControlName="contact_phone"
+              class="w-full rounded-xl border px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2"
+              [class]="controlError('contact_phone') ? borderInvalid : borderValid"
+              placeholder="999888777"
+            />
+            @if (controlError('contact_phone'); as error) {
+              <p class="mt-1.5 text-xs text-rose-600">{{ error }}</p>
+            }
+          </div>
+        </div>
+
+        <div>
+          <label for="entity-contact-email" class="mb-1.5 block text-sm font-medium text-slate-700">
+            Correo de contacto
+          </label>
+          <input
+            id="entity-contact-email"
+            type="email"
+            formControlName="contact_email"
+            class="w-full rounded-xl border px-3.5 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2"
+            [class]="controlError('contact_email') ? borderInvalid : borderValid"
+            placeholder="contacto@organizacion.org"
+          />
+          @if (controlError('contact_email'); as error) {
+            <p class="mt-1.5 text-xs text-rose-600">{{ error }}</p>
+          }
+        </div>
+
+        <div class="flex flex-wrap gap-3 border-t border-slate-100 pt-5">
+          <button
+            type="submit"
+            class="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+            [disabled]="saving()"
+          >
+            @if (saving()) {
+              <span
+                class="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white"
+                aria-hidden="true"
+              ></span>
+              Guardando…
+            } @else if (mode() === 'edit') {
+              Guardar cambios
+            } @else {
+              Registrar entidad
+            }
+          </button>
+
+          @if (mode() === 'edit') {
+            <button
+              type="button"
+              class="inline-flex items-center justify-center rounded-xl border border-slate-300 px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+              (click)="cancel()"
+            >
+              Cancelar
+            </button>
+          }
+        </div>
+      </form>
+    </div>
+  }
+</div>
+
+

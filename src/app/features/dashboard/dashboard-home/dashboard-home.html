@@ -1,0 +1,191 @@
+<div class="space-y-6">
+  <!-- Encabezado -->
+  <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+    <div>
+      <h1 class="text-2xl font-bold tracking-tight text-slate-900">
+        {{ greeting() }}, {{ user()?.name ?? 'invitado' }}
+      </h1>
+      <p class="mt-1 text-sm text-slate-500">
+        Este es el resumen de la actividad de tu entidad en Avisti Connect.
+      </p>
+    </div>
+    <a
+      routerLink="/panel/solicitudes/nueva"
+      class="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700"
+    >
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-4 w-4" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+      </svg>
+      Nueva solicitud
+    </a>
+  </div>
+
+  <!-- Perfil institucional -->
+  @if (!loading() && !entity()) {
+    <a
+      routerLink="/panel/perfil"
+      class="flex flex-col gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-5 transition hover:border-amber-300 sm:flex-row sm:items-center sm:justify-between"
+    >
+      <div class="flex items-start gap-3">
+        <span
+          class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-600"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="h-5 w-5" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0 3.75h.008v.008H12v-.008z" />
+          </svg>
+        </span>
+        <div>
+          <p class="text-sm font-semibold text-amber-900">Completa tu perfil institucional</p>
+          <p class="mt-0.5 text-sm text-amber-700">
+            Registra los datos corporativos de tu entidad para completar tu onboarding.
+          </p>
+        </div>
+      </div>
+      <span class="shrink-0 text-sm font-semibold text-amber-800">Completar ahora →</span>
+    </a>
+  } @else if (entity(); as currentEntity) {
+    <div
+      class="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-5 sm:flex-row sm:items-center sm:justify-between"
+    >
+      <div class="flex items-center gap-3">
+        <span
+          class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-sm font-bold uppercase text-emerald-700"
+        >
+          {{ currentEntity.company_name.charAt(0) }}
+        </span>
+        <div>
+          <p class="text-sm font-semibold text-slate-900">{{ currentEntity.company_name }}</p>
+          <p class="text-xs text-slate-500">
+            {{ currentEntity.entity_type }} · RUC/DNI {{ currentEntity.tax_id }}
+          </p>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <app-status-badge kind="verification" [value]="currentEntity.verification_status" />
+        <a routerLink="/panel/perfil" class="text-sm font-medium text-emerald-700 hover:text-emerald-800">
+          Ver perfil
+        </a>
+      </div>
+    </div>
+  }
+
+  @if (loading()) {
+    <app-skeleton variant="rows" />
+  } @else if (error()) {
+    <app-error-state [message]="error() ?? ''" (retry)="load()" />
+  } @else {
+    <!-- Indicadores -->
+    <dl class="grid grid-cols-2 gap-4 xl:grid-cols-4">
+      <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <dt class="text-xs font-medium uppercase tracking-wide text-slate-500">
+          Solicitudes totales
+        </dt>
+        <dd class="mt-2 text-3xl font-bold text-slate-900">{{ totalRequests() }}</dd>
+      </div>
+      <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <dt class="text-xs font-medium uppercase tracking-wide text-slate-500">En espera</dt>
+        <dd class="mt-2 text-3xl font-bold text-amber-600">{{ onHoldRequests() }}</dd>
+      </div>
+      <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <dt class="text-xs font-medium uppercase tracking-wide text-slate-500">Aprobadas</dt>
+        <dd class="mt-2 text-3xl font-bold text-emerald-600">{{ approvedRequests() }}</dd>
+      </div>
+      <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <dt class="text-xs font-medium uppercase tracking-wide text-slate-500">Asignaciones</dt>
+        <dd class="mt-2 text-3xl font-bold text-sky-600">{{ totalAssignments() }}</dd>
+      </div>
+    </dl>
+
+    <div class="grid gap-6 xl:grid-cols-2">
+      <!-- Últimas solicitudes -->
+      <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div class="flex items-center justify-between">
+          <h2 class="text-sm font-semibold text-slate-900">Últimas solicitudes</h2>
+          <a routerLink="/panel/solicitudes" class="text-sm font-medium text-emerald-700 hover:text-emerald-800">
+            Ver todas
+          </a>
+        </div>
+
+        @if (recentRequests().length === 0) {
+          <p
+            class="mt-4 rounded-xl border border-dashed border-slate-300 p-6 text-center text-sm text-slate-500"
+          >
+            Aún no has creado solicitudes.
+          </p>
+        } @else {
+          <ul class="mt-4 divide-y divide-slate-100">
+            @for (request of recentRequests(); track request.request_id) {
+              <li>
+                <a
+                  [routerLink]="['/panel/solicitudes', request.request_id]"
+                  class="flex items-center justify-between gap-3 py-3 transition hover:bg-slate-50"
+                >
+                  <div class="min-w-0">
+                    <p class="truncate text-sm font-medium text-slate-900">
+                      #{{ request.request_id }} ·
+                      {{ request.request_type === 'DONATION' ? 'Donación' : 'Convenio' }}
+                    </p>
+                    <p class="truncate text-xs text-slate-500">
+                      {{ request.requested_quantity }} unidades ·
+                      {{ request.request_date | date: 'dd/MM/yyyy' }}
+                    </p>
+                  </div>
+                  <app-status-badge kind="request-status" [value]="request.request_status" />
+                </a>
+              </li>
+            }
+          </ul>
+        }
+      </section>
+
+      <!-- Últimas asignaciones -->
+      <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div class="flex items-center justify-between">
+          <h2 class="text-sm font-semibold text-slate-900">Últimas asignaciones</h2>
+          <a routerLink="/panel/asignaciones" class="text-sm font-medium text-emerald-700 hover:text-emerald-800">
+            Ver todas
+          </a>
+        </div>
+
+        @if (recentAssignments().length === 0) {
+          <p
+            class="mt-4 rounded-xl border border-dashed border-slate-300 p-6 text-center text-sm text-slate-500"
+          >
+            Todavía no tienes equipos asignados.
+          </p>
+        } @else {
+          <ul class="mt-4 divide-y divide-slate-100">
+            @for (assignment of recentAssignments(); track assignment.assignment_id) {
+              <li>
+                <a
+                  [routerLink]="['/panel/asignaciones', assignment.assignment_id]"
+                  class="block py-3 transition hover:bg-slate-50"
+                >
+                  <div class="flex items-center justify-between gap-3">
+                    <p class="truncate text-sm font-medium text-slate-900">
+                      #{{ assignment.assignment_id }} ·
+                      {{ assignment.equipment?.product.name ?? 'Equipo' }}
+                    </p>
+                    <span class="shrink-0 font-mono text-xs text-slate-500">
+                      {{ assignment.donation_deed_ref ?? '—' }}
+                    </span>
+                  </div>
+                  <p class="mt-0.5 text-xs text-slate-500">
+                    Entrega:
+                    {{
+                      assignment.delivery_date
+                        ? (assignment.delivery_date | date: 'dd/MM/yyyy')
+                        : 'pendiente'
+                    }}
+                    · {{ assignment.estimated_beneficiaries_impact ?? 0 }} beneficiarios
+                  </p>
+                </a>
+              </li>
+            }
+          </ul>
+        }
+      </section>
+    </div>
+  }
+</div>
+

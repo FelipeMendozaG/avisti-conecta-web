@@ -1,0 +1,145 @@
+<div class="space-y-6">
+  <a
+    routerLink="/panel/asignaciones"
+    class="inline-flex items-center gap-1 text-sm font-medium text-slate-500 transition hover:text-slate-700"
+  >
+    ← Volver a asignaciones
+  </a>
+
+  @if (loading()) {
+    <app-skeleton variant="detail" />
+  } @else if (error()) {
+    <app-error-state [message]="error() ?? ''" [withRetry]="false">
+      <a
+        routerLink="/panel/asignaciones"
+        class="mt-2 rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white"
+      >
+        Volver al listado
+      </a>
+    </app-error-state>
+  } @else if (assignment(); as current) {
+    <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
+        <div>
+          <p class="text-xs font-medium uppercase tracking-wider text-emerald-700">
+            Asignación #{{ current.assignment_id }}
+          </p>
+          <h1 class="mt-1 text-2xl font-bold tracking-tight text-slate-900">
+            {{ current.equipment?.product.name ?? 'Equipo asignado' }}
+          </h1>
+          @if (current.request) {
+            <div class="mt-2 flex flex-wrap items-center gap-2">
+              <app-status-badge kind="request-type" [value]="current.request.request_type" />
+              <app-status-badge kind="request-status" [value]="current.request.request_status" />
+            </div>
+          }
+        </div>
+        <div class="rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+          Convenio aprobado · Acta {{ current.donation_deed_ref ?? 'pendiente' }}
+        </div>
+      </div>
+
+      <dl class="mt-6 grid gap-4 border-t border-slate-100 pt-5 sm:grid-cols-3">
+        <div>
+          <dt class="text-xs font-medium uppercase tracking-wide text-slate-500">
+            Fecha de entrega
+          </dt>
+          <dd class="mt-1 text-lg font-semibold text-slate-900">
+            {{ current.delivery_date ? (current.delivery_date | date: 'dd/MM/yyyy') : 'Pendiente' }}
+          </dd>
+        </div>
+        <div>
+          <dt class="text-xs font-medium uppercase tracking-wide text-slate-500">
+            Beneficiarios estimados
+          </dt>
+          <dd class="mt-1 text-lg font-semibold text-slate-900">
+            {{ current.estimated_beneficiaries_impact ?? 0 }}
+          </dd>
+        </div>
+        <div>
+          <dt class="text-xs font-medium uppercase tracking-wide text-slate-500">
+            Solicitud origen
+          </dt>
+          <dd class="mt-1 text-lg font-semibold text-slate-900">#{{ current.request_id }}</dd>
+        </div>
+      </dl>
+    </div>
+
+    <div class="grid gap-6 lg:grid-cols-2">
+      @if (current.equipment; as equipment) {
+        <section class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div class="flex items-center justify-between gap-3">
+            <h2 class="text-base font-semibold text-slate-900">Equipo asignado</h2>
+            <app-status-badge kind="life-cycle" [value]="equipment.life_cycle_status" />
+          </div>
+
+          <div class="mt-4 rounded-xl bg-slate-900 px-3 py-2 font-mono text-sm text-slate-100">
+            {{ equipment.serial_number }}
+          </div>
+
+          <dl class="mt-4 space-y-3 text-sm">
+            <div class="flex justify-between gap-4">
+              <dt class="text-slate-500">Producto</dt>
+              <dd class="text-right font-medium text-slate-900">
+                {{ equipment.product.name }}
+              </dd>
+            </div>
+            <div class="flex justify-between gap-4">
+              <dt class="text-slate-500">Código</dt>
+              <dd class="font-medium text-slate-900">{{ equipment.product.product_code }}</dd>
+            </div>
+            <div class="flex justify-between gap-4">
+              <dt class="text-slate-500">Adquisición</dt>
+              <dd class="font-medium text-slate-900">
+                {{ equipment.acquisition_date ? (equipment.acquisition_date | date: 'dd/MM/yyyy') : '—' }}
+              </dd>
+            </div>
+            <div class="flex justify-between gap-4">
+              <dt class="text-slate-500">Valor de mercado</dt>
+              <dd class="font-medium text-slate-900">S/ {{ equipment.current_market_value }}</dd>
+            </div>
+          </dl>
+        </section>
+      }
+
+      @if (current.request; as request) {
+        <section class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div class="flex items-center justify-between gap-3">
+            <h2 class="text-base font-semibold text-slate-900">
+              Solicitud #{{ request.request_id }}
+            </h2>
+            <app-status-badge kind="request-status" [value]="request.request_status" />
+          </div>
+
+          <dl class="mt-4 space-y-3 text-sm">
+            <div class="flex justify-between gap-4">
+              <dt class="text-slate-500">Fecha de solicitud</dt>
+              <dd class="font-medium text-slate-900">
+                {{ request.request_date | date: 'dd/MM/yyyy' }}
+              </dd>
+            </div>
+            <div class="flex justify-between gap-4">
+              <dt class="text-slate-500">Cantidad solicitada</dt>
+              <dd class="font-medium text-slate-900">{{ request.requested_quantity }} unidades</dd>
+            </div>
+          </dl>
+
+          <div class="mt-4 rounded-xl bg-slate-50 p-4">
+            <p class="text-xs font-medium uppercase tracking-wide text-slate-500">Necesidad</p>
+            <p class="mt-1.5 whitespace-pre-line text-sm leading-relaxed text-slate-700">
+              {{ request.need_description }}
+            </p>
+          </div>
+
+          <a
+            [routerLink]="['/panel/solicitudes', request.request_id]"
+            class="mt-4 inline-flex items-center gap-1 text-sm font-medium text-emerald-700 hover:text-emerald-800"
+          >
+            Ver solicitud completa →
+          </a>
+        </section>
+      }
+    </div>
+  }
+</div>
+

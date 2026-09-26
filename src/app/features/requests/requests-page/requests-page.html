@@ -1,0 +1,151 @@
+<div class="space-y-6">
+  <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+    <div>
+      <h1 class="text-2xl font-bold tracking-tight text-slate-900">Solicitudes</h1>
+      <p class="mt-1 text-sm text-slate-500">
+        Historial de donaciones y convenios solicitados por tu entidad.
+      </p>
+    </div>
+    <a
+      routerLink="/panel/solicitudes/nueva"
+      class="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700"
+    >
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="h-4 w-4" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+      </svg>
+      Nueva solicitud
+    </a>
+  </div>
+
+  <!-- Filtros -->
+  <div
+    class="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 sm:flex-row sm:items-end"
+  >
+    <div class="flex-1">
+      <label for="requests-status" class="mb-1.5 block text-sm font-medium text-slate-700">
+        Estado
+      </label>
+      <select
+        id="requests-status"
+        class="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm text-slate-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
+        [value]="statusFilter()"
+        (change)="statusFilter.set($any($event.target).value); applyFilters()"
+      >
+        <option value="">Todos</option>
+        <option value="ON_HOLD">En espera</option>
+        <option value="APPROVED">Aprobadas</option>
+        <option value="REJECTED">Rechazadas</option>
+      </select>
+    </div>
+
+    <div class="flex-1">
+      <label for="requests-type" class="mb-1.5 block text-sm font-medium text-slate-700">
+        Tipo
+      </label>
+      <select
+        id="requests-type"
+        class="w-full rounded-xl border border-slate-300 px-3.5 py-2.5 text-sm text-slate-900 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
+        [value]="typeFilter()"
+        (change)="typeFilter.set($any($event.target).value); applyFilters()"
+      >
+        <option value="">Todos</option>
+        <option value="DONATION">Donación</option>
+        <option value="AGREEMENT">Convenio</option>
+      </select>
+    </div>
+
+    @if (hasFilters()) {
+      <button
+        type="button"
+        class="rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-slate-50"
+        (click)="clearFilters()"
+      >
+        Limpiar
+      </button>
+    }
+  </div>
+
+  @if (loading()) {
+    <app-skeleton variant="rows" />
+  } @else if (error()) {
+    <app-error-state [message]="error() ?? ''" (retry)="load()" />
+  } @else if (items().length === 0) {
+    <app-empty-state
+      title="Sin solicitudes"
+      message="No hay solicitudes para los filtros seleccionados. Crea la primera y da seguimiento a su estado."
+    >
+      <a
+        routerLink="/panel/solicitudes/nueva"
+        class="mt-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white"
+      >
+        Crear solicitud
+      </a>
+    </app-empty-state>
+  } @else {
+    <!-- Tabla (escritorio) -->
+    <div class="hidden overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm md:block">
+      <table class="w-full text-left text-sm">
+        <thead
+          class="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500"
+        >
+          <tr>
+            <th class="px-5 py-3 font-medium">#</th>
+            <th class="px-5 py-3 font-medium">Tipo</th>
+            <th class="px-5 py-3 font-medium">Fecha</th>
+            <th class="px-5 py-3 font-medium">Cantidad</th>
+            <th class="px-5 py-3 font-medium">Estado</th>
+            <th class="px-5 py-3 font-medium"></th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+          @for (request of items(); track request.request_id) {
+            <tr class="transition hover:bg-slate-50">
+              <td class="px-5 py-3.5 font-medium text-slate-900">{{ request.request_id }}</td>
+              <td class="px-5 py-3.5">
+                <app-status-badge kind="request-type" [value]="request.request_type" />
+              </td>
+              <td class="px-5 py-3.5 text-slate-600">
+                {{ request.request_date | date: 'dd/MM/yyyy' }}
+              </td>
+              <td class="px-5 py-3.5 text-slate-600">{{ request.requested_quantity }} un.</td>
+              <td class="px-5 py-3.5">
+                <app-status-badge kind="request-status" [value]="request.request_status" />
+              </td>
+              <td class="px-5 py-3.5 text-right">
+                <a
+                  [routerLink]="['/panel/solicitudes', request.request_id]"
+                  class="font-medium text-emerald-700 hover:text-emerald-800"
+                >
+                  Ver detalle
+                </a>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Tarjetas (móvil) -->
+    <div class="space-y-3 md:hidden">
+      @for (request of items(); track request.request_id) {
+        <a
+          [routerLink]="['/panel/solicitudes', request.request_id]"
+          class="block rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
+        >
+          <div class="flex items-center justify-between gap-3">
+            <p class="text-sm font-semibold text-slate-900">Solicitud #{{ request.request_id }}</p>
+            <app-status-badge kind="request-status" [value]="request.request_status" />
+          </div>
+          <p class="mt-2 line-clamp-2 text-sm text-slate-600">{{ request.need_description }}</p>
+          <div class="mt-3 flex items-center justify-between text-xs text-slate-500">
+            <app-status-badge kind="request-type" [value]="request.request_type" />
+            <span>{{ request.request_date | date: 'dd/MM/yyyy' }}</span>
+          </div>
+        </a>
+      }
+    </div>
+
+    <app-pagination [page]="page()" [totalPages]="totalPages()" (pageChange)="goToPage($event)" />
+  }
+</div>
+

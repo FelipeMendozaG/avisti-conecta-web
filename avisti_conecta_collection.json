@@ -1,0 +1,2341 @@
+{
+  "info": {
+    "_postman_id": "a7c1f3b2-4d5e-4f60-9a1b-2c3d4e5f6a7b",
+    "name": "Avisti Conecta - API Framework Chepita",
+    "description": "Coleccion Postman v2.1 del modulo **Avisti Conecta** (12 endpoints).\n\nVariables de coleccion:\n\n- `base_url`: `http://localhost:4005/api/v1` (ajustar al puerto de `PORT` en el `.env`).\n- `bearer_token`: se llena automaticamente al ejecutar `POST /auth/login` o `POST /auth/register`.\n- `entity_id`, `request_id`, `assignment_id`: se llenan automaticamente al crear o consultar los recursos.\n- `user_email` y `user_password`: credenciales usadas por los endpoints de autenticacion.\n\nOrden sugerido de ejecucion: Auth, Entities, Catalogo, Donation Requests, Donation Assignments.\n\nLas respuestas de negocio usan el envelope `{ status, message, data }`.\nLos errores de validacion responden 403 con `{ errors: [...] }` y los de sesion 401 con `{ error: \"...\" }`.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:4005/api/v1",
+      "type": "string"
+    },
+    {
+      "key": "bearer_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "entity_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "request_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "assignment_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "user_email",
+      "value": "contacto@ongavisti.org",
+      "type": "string"
+    },
+    {
+      "key": "user_password",
+      "value": "Chepita2026",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Autenticacion (Auth)",
+      "description": "Registro de usuario y obtencion del token JWT de sesion.",
+      "item": [
+        {
+          "name": "POST /auth/register - Registro de usuario",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Responde 201 Created\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "// Guarda el token de sesion para el resto de la coleccion",
+                  "if (pm.response.code === 200 || pm.response.code === 201) {",
+                  "    const json = pm.response.json();",
+                  "    pm.test(\"Responde con el token de acceso\", function () {",
+                  "        pm.expect(json.data.token).to.be.a(\"string\");",
+                  "    });",
+                  "    pm.test(\"No expone el password del usuario\", function () {",
+                  "        pm.expect(json.data.user).to.not.have.property(\"password\");",
+                  "    });",
+                  "    pm.collectionVariables.set(\"bearer_token\", json.data.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"ONG Avisti Peru\",\n  \"email\": \"{{user_email}}\",\n  \"password\": \"{{user_password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/register",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            },
+            "description": "Registra un nuevo usuario en la tabla `users` y devuelve el token de acceso.\n\nEl email debe ser unico: si ya existe responde 409 `EMAIL_ALREADY_EXISTS`.\nEl token obtenido se guarda automaticamente en la variable `bearer_token`."
+          },
+          "response": [
+            {
+              "name": "201 Created - Usuario registrado",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"ONG Avisti Peru\",\n  \"email\": \"{{user_email}}\",\n  \"password\": \"{{user_password}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}/auth/register",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "register"
+                  ]
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Proceso realizado con exito\",\n  \"data\": {\n    \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOjEyLCJlbWFpbCI6ImNvbnRhY3RvQG9uZ2F2aXN0aS5vcmciLCJuYW1lIjoiT05HIEF2aXN0aSBQZXJ1IiwiaWF0IjoxNzU4ODAwMDAwLCJleHAiOjE3NTg4MTA4MDB9.firma-de-ejemplo\",\n    \"user\": {\n      \"id\": 12,\n      \"name\": \"ONG Avisti Peru\",\n      \"email\": \"contacto@ongavisti.org\",\n      \"created_at\": \"2026-09-25T14:03:21.000Z\"\n    }\n  }\n}"
+            },
+            {
+              "name": "409 Conflict - El email ya esta registrado",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"ONG Avisti Peru\",\n  \"email\": \"{{user_email}}\",\n  \"password\": \"{{user_password}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}/auth/register",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "register"
+                  ]
+                }
+              },
+              "status": "Conflict",
+              "code": 409,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"status\": \"error\",\n  \"message\": \"Ocurrio un problema\",\n  \"data\": \"EMAIL_ALREADY_EXISTS\"\n}"
+            },
+            {
+              "name": "403 Forbidden - Validacion del body",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"correo-invalido\",\n  \"password\": \"123\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}/auth/register",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "register"
+                  ]
+                }
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"errors\": [\n    {\n      \"type\": \"field\",\n      \"value\": \"correo-invalido\",\n      \"msg\": \"El correo electronico no tiene un formato valido\",\n      \"path\": \"email\",\n      \"location\": \"body\"\n    },\n    {\n      \"type\": \"field\",\n      \"value\": \"123\",\n      \"msg\": \"La contrasena debe tener al menos 6 caracteres\",\n      \"path\": \"password\",\n      \"location\": \"body\"\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "POST /auth/login - Inicio de sesion",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Responde 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "// Guarda el token de sesion para el resto de la coleccion",
+                  "if (pm.response.code === 200 || pm.response.code === 201) {",
+                  "    const json = pm.response.json();",
+                  "    pm.test(\"Responde con el token de acceso\", function () {",
+                  "        pm.expect(json.data.token).to.be.a(\"string\");",
+                  "    });",
+                  "    pm.test(\"No expone el password del usuario\", function () {",
+                  "        pm.expect(json.data.user).to.not.have.property(\"password\");",
+                  "    });",
+                  "    pm.collectionVariables.set(\"bearer_token\", json.data.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{user_email}}\",\n  \"password\": \"{{user_password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Autentica al usuario y devuelve el token de sesion (JWT, vigencia 3 horas).\n\nCodigos: 200 correcto, 401 `INVALID_PASSWORD`, 404 `USER_NOT_FOUND`.\nEl token se guarda automaticamente en la variable `bearer_token`."
+          },
+          "response": [
+            {
+              "name": "200 OK - Sesion iniciada",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"{{user_email}}\",\n  \"password\": \"{{user_password}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}/auth/login",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "login"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Proceso realizado con exito\",\n  \"data\": {\n    \"user\": {\n      \"id\": 12,\n      \"name\": \"ONG Avisti Peru\",\n      \"email\": \"contacto@ongavisti.org\",\n      \"created_at\": \"2026-09-25T14:03:21.000Z\"\n    },\n    \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOjEyLCJlbWFpbCI6ImNvbnRhY3RvQG9uZ2F2aXN0aS5vcmciLCJuYW1lIjoiT05HIEF2aXN0aSBQZXJ1IiwiaWF0IjoxNzU4ODAwMDAwLCJleHAiOjE3NTg4MTA4MDB9.firma-de-ejemplo\"\n  }\n}"
+            },
+            {
+              "name": "401 Unauthorized - Contrasena incorrecta",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"{{user_email}}\",\n  \"password\": \"contrasena-incorrecta\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}/auth/login",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "login"
+                  ]
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"status\": \"error\",\n  \"message\": \"Ocurrio un problema\",\n  \"data\": \"INVALID_PASSWORD\"\n}"
+            },
+            {
+              "name": "404 Not Found - Usuario no encontrado",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"nadie@example.com\",\n  \"password\": \"{{user_password}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}/auth/login",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "auth",
+                    "login"
+                  ]
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"status\": \"error\",\n  \"message\": \"Ocurrio un problema\",\n  \"data\": \"USER_NOT_FOUND\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2. Entidades (Entities)",
+      "description": "Onboarding institucional de la entidad asociada al usuario autenticado.",
+      "item": [
+        {
+          "name": "POST /entities/ - Registro del perfil institucional",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Responde 201 Created\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "// Guarda el entity_id de la entidad creada",
+                  "if (pm.response.code === 201) {",
+                  "    const json = pm.response.json();",
+                  "    pm.test(\"La entidad arranca en verificacion PENDING\", function () {",
+                  "        pm.expect(json.data.verification_status).to.eql(\"PENDING\");",
+                  "    });",
+                  "    pm.collectionVariables.set(\"entity_id\", String(json.data.entity_id));",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{bearer_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tax_id\": \"20123456789\",\n  \"company_name\": \"ONG Avisti Peru\",\n  \"entity_type\": \"ONG\",\n  \"address\": \"Av. Los Proceres 1234, Lima\",\n  \"contact_name\": \"Maria Quispe\",\n  \"contact_email\": \"contacto@ongavisti.org\",\n  \"contact_phone\": \"999888777\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/entities/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "entities",
+                ""
+              ]
+            },
+            "description": "Registra los datos institucionales de la entidad del usuario autenticado.\n\nEl `user_id` se toma del token y `verification_status` se inicializa en `PENDING` desde el backend.\nEnviar `user_id` o `verification_status` en el body devuelve 403.\nEl `entity_id` resultante se guarda automaticamente en la variable `entity_id`."
+          },
+          "response": [
+            {
+              "name": "201 Created - Entidad registrada",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{bearer_token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"tax_id\": \"20123456789\",\n  \"company_name\": \"ONG Avisti Peru\",\n  \"entity_type\": \"ONG\",\n  \"address\": \"Av. Los Proceres 1234, Lima\",\n  \"contact_name\": \"Maria Quispe\",\n  \"contact_email\": \"contacto@ongavisti.org\",\n  \"contact_phone\": \"999888777\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}/entities/",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "entities",
+                    ""
+                  ]
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Proceso realizado con exito\",\n  \"data\": {\n    \"entity_id\": 7,\n    \"tax_id\": \"20123456789\",\n    \"company_name\": \"ONG Avisti Peru\",\n    \"entity_type\": \"ONG\",\n    \"address\": \"Av. Los Proceres 1234, Lima\",\n    \"contact_name\": \"Maria Quispe\",\n    \"contact_email\": \"contacto@ongavisti.org\",\n    \"contact_phone\": \"999888777\",\n    \"verification_status\": \"PENDING\",\n    \"registration_date\": \"2026-09-25T14:10:05.000Z\",\n    \"user_id\": 12\n  }\n}"
+            },
+            {
+              "name": "409 Conflict - El usuario ya tiene una entidad registrada",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{bearer_token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"tax_id\": \"20123456789\",\n  \"company_name\": \"ONG Avisti Peru\",\n  \"entity_type\": \"ONG\",\n  \"address\": \"Av. Los Proceres 1234, Lima\",\n  \"contact_name\": \"Maria Quispe\",\n  \"contact_email\": \"contacto@ongavisti.org\",\n  \"contact_phone\": \"999888777\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}/entities/",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "entities",
+                    ""
+                  ]
+                }
+              },
+              "status": "Conflict",
+              "code": 409,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"status\": \"error\",\n  \"message\": \"Ocurrio un problema\",\n  \"data\": \"ENTITY_ALREADY_EXISTS\"\n}"
+            },
+            {
+              "name": "403 Forbidden - Campo restringido o dato invalido",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{bearer_token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"company_name\": \"ONG Avisti Peru\",\n  \"verification_status\": \"VERIFIED\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}/entities/",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "entities",
+                    ""
+                  ]
+                }
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"errors\": [\n    {\n      \"type\": \"field\",\n      \"value\": \"ONG Avisti Peru\",\n      \"msg\": \"El estado de verificacion no puede ser modificado desde este endpoint\",\n      \"path\": \"verification_status\",\n      \"location\": \"body\"\n    }\n  ]\n}"
+            },
+            {
+              "name": "401 Unauthorized - Token ausente o invalido",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"tax_id\": \"20123456789\",\n  \"company_name\": \"ONG Avisti Peru\",\n  \"entity_type\": \"ONG\",\n  \"address\": \"Av. Los Proceres 1234, Lima\",\n  \"contact_name\": \"Maria Quispe\",\n  \"contact_email\": \"contacto@ongavisti.org\",\n  \"contact_phone\": \"999888777\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}/entities/",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "entities",
+                    ""
+                  ]
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"error\": \"ERROR_NO_EXISTS_TOKEN\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /entities/me - Perfil institucional en sesion",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Responde 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{bearer_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/entities/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "entities",
+                "me"
+              ]
+            },
+            "description": "Devuelve el perfil institucional y el estado de verificacion de la entidad logueada.\n\nSi el usuario aun no registro su entidad responde 404 `ENTITY_NOT_FOUND`."
+          },
+          "response": [
+            {
+              "name": "200 OK - Perfil de la entidad",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{bearer_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/entities/me",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "entities",
+                    "me"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Proceso realizado con exito\",\n  \"data\": {\n    \"entity_id\": 7,\n    \"tax_id\": \"20123456789\",\n    \"company_name\": \"ONG Avisti Peru\",\n    \"entity_type\": \"ONG\",\n    \"address\": \"Av. Los Proceres 1234, Lima\",\n    \"contact_name\": \"Maria Quispe\",\n    \"contact_email\": \"contacto@ongavisti.org\",\n    \"contact_phone\": \"999888777\",\n    \"verification_status\": \"PENDING\",\n    \"registration_date\": \"2026-09-25T14:10:05.000Z\",\n    \"user_id\": 12\n  }\n}"
+            },
+            {
+              "name": "404 Not Found - El usuario no tiene entidad registrada",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{bearer_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/entities/me",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "entities",
+                    "me"
+                  ]
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"error\": \"ENTITY_NOT_FOUND\"\n}"
+            },
+            {
+              "name": "401 Unauthorized - Token expirado o invalido",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{bearer_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/entities/me",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "entities",
+                    "me"
+                  ]
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"error\": \"ERROR_NO_VALID_TOKEN\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "PUT /entities/{{entity_id}} - Actualizar informacion institucional",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Responde 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{bearer_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"company_name\": \"ONG Avisti Peru Actualizada\",\n  \"address\": \"Jr. Nuevo Horizonte 456, Lima\",\n  \"contact_phone\": \"999000111\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/entities/{{entity_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "entities",
+                "{{entity_id}}"
+              ]
+            },
+            "description": "Actualiza la informacion institucional de la entidad en sesion.\n\nTodos los campos son opcionales pero al menos uno debe enviarse (si no, 400 `EMPTY_UPDATE`).\nSolo se puede modificar la entidad del token: otra entidad responde 403 `ENTITY_FORBIDDEN`."
+          },
+          "response": [
+            {
+              "name": "200 OK - Entidad actualizada",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{bearer_token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"company_name\": \"ONG Avisti Peru Actualizada\",\n  \"address\": \"Jr. Nuevo Horizonte 456, Lima\",\n  \"contact_phone\": \"999000111\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}/entities/{{entity_id}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "entities",
+                    "{{entity_id}}"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Proceso realizado con exito\",\n  \"data\": {\n    \"entity_id\": 7,\n    \"tax_id\": \"20123456789\",\n    \"company_name\": \"ONG Avisti Peru Actualizada\",\n    \"entity_type\": \"ONG\",\n    \"address\": \"Jr. Nuevo Horizonte 456, Lima\",\n    \"contact_name\": \"Maria Quispe\",\n    \"contact_email\": \"contacto@ongavisti.org\",\n    \"contact_phone\": \"999000111\",\n    \"verification_status\": \"PENDING\",\n    \"registration_date\": \"2026-09-25T14:10:05.000Z\",\n    \"user_id\": 12\n  }\n}"
+            },
+            {
+              "name": "403 Forbidden - La entidad no pertenece a la sesion",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{bearer_token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"company_name\": \"Intento sobre otra entidad\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}/entities/{{entity_id}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "entities",
+                    "{{entity_id}}"
+                  ]
+                }
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"status\": \"error\",\n  \"message\": \"Ocurrio un problema\",\n  \"data\": \"ENTITY_FORBIDDEN\"\n}"
+            },
+            {
+              "name": "400 Bad Request - Sin campos por actualizar",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{bearer_token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}/entities/{{entity_id}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "entities",
+                    "{{entity_id}}"
+                  ]
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"status\": \"error\",\n  \"message\": \"Ocurrio un problema\",\n  \"data\": \"EMPTY_UPDATE\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3. Catalogo (Products & Equipments)",
+      "description": "Exploracion de recursos disponibles: catálogo de productos y equipos con su ciclo de vida.",
+      "item": [
+        {
+          "name": "GET /products/ - Catalogo general de productos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Responde 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "const json = pm.response.json();",
+                  "pm.test(\"Respuesta paginada con metadata e items\", function () {",
+                  "    pm.expect(json.data).to.have.property(\"total\");",
+                  "    pm.expect(json.data).to.have.property(\"page\");",
+                  "    pm.expect(json.data).to.have.property(\"limit\");",
+                  "    pm.expect(json.data).to.have.property(\"total_pages\");",
+                  "    pm.expect(json.data.items).to.be.an(\"array\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/products/?category=EQUIPMENT&search=HP&page=1&limit=10",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "products",
+                ""
+              ],
+              "query": [
+                {
+                  "key": "category",
+                  "value": "EQUIPMENT",
+                  "description": "Filtro exacto por categoria (opcional)",
+                  "disabled": false
+                },
+                {
+                  "key": "search",
+                  "value": "HP",
+                  "description": "Busqueda parcial por nombre del producto (opcional)",
+                  "disabled": false
+                },
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Pagina solicitada (opcional, por defecto 1)"
+                },
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Registros por pagina (opcional, por defecto 20, maximo 100)"
+                }
+              ]
+            },
+            "description": "Lista el catalogo general de productos (tabla `products`).\n\nEndpoint publico: no requiere token.\nFiltros opcionales: `category`, `search`, `page` y `limit`."
+          },
+          "response": [
+            {
+              "name": "200 OK - Listado paginado de productos",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/products/?category=EQUIPMENT&search=HP&page=1&limit=10",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "products",
+                    ""
+                  ],
+                  "query": [
+                    {
+                      "key": "category",
+                      "value": "EQUIPMENT",
+                      "description": "Filtro exacto por categoria (opcional)",
+                      "disabled": false
+                    },
+                    {
+                      "key": "search",
+                      "value": "HP",
+                      "description": "Busqueda parcial por nombre del producto (opcional)",
+                      "disabled": false
+                    },
+                    {
+                      "key": "page",
+                      "value": "1",
+                      "description": "Pagina solicitada (opcional, por defecto 1)"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "10",
+                      "description": "Registros por pagina (opcional, por defecto 20, maximo 100)"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Proceso realizado con exito\",\n  \"data\": {\n    \"total\": 1,\n    \"page\": 1,\n    \"limit\": 10,\n    \"total_pages\": 1,\n    \"items\": [\n      {\n        \"product_id\": 1,\n        \"product_code\": \"5100021518\",\n        \"name\": \"COMPUTADORA PORTATIL MOD NB HP ProBook 4410s CONFIG INTEL CORE2DUO T6570 ...\",\n        \"url_image\": null,\n        \"description\": null,\n        \"category\": \"EQUIPMENT\",\n        \"created_at\": \"2026-09-19T06:57:16.000Z\"\n      }\n    ]\n  }\n}"
+            },
+            {
+              "name": "200 OK - Catalogo sin resultados",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/products/?search=NO-EXISTE",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "products",
+                    ""
+                  ],
+                  "query": [
+                    {
+                      "key": "search",
+                      "value": "NO-EXISTE",
+                      "description": "Busqueda sin coincidencias"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Proceso realizado con exito\",\n  \"data\": {\n    \"total\": 0,\n    \"page\": 1,\n    \"limit\": 20,\n    \"total_pages\": 0,\n    \"items\": []\n  }\n}"
+            },
+            {
+              "name": "403 Forbidden - Paginacion invalida",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/products/?limit=abc",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "products",
+                    ""
+                  ],
+                  "query": [
+                    {
+                      "key": "limit",
+                      "value": "abc",
+                      "description": "Debe ser numerico"
+                    }
+                  ]
+                }
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"errors\": [\n    {\n      \"type\": \"field\",\n      \"value\": \"abc\",\n      \"msg\": \"Los parametros de paginacion no son validos\",\n      \"path\": \"limit\",\n      \"location\": \"query\"\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /equipments/ - Equipos y su ciclo de vida",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Responde 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "const json = pm.response.json();",
+                  "pm.test(\"Respuesta paginada con metadata e items\", function () {",
+                  "    pm.expect(json.data).to.have.property(\"total\");",
+                  "    pm.expect(json.data).to.have.property(\"page\");",
+                  "    pm.expect(json.data).to.have.property(\"limit\");",
+                  "    pm.expect(json.data).to.have.property(\"total_pages\");",
+                  "    pm.expect(json.data.items).to.be.an(\"array\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/equipments/?product_id=1&life_cycle_status=DEPRECIATED&page=1&limit=10",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "equipments",
+                ""
+              ],
+              "query": [
+                {
+                  "key": "product_id",
+                  "value": "1",
+                  "description": "Filtro por producto (opcional)",
+                  "disabled": false
+                },
+                {
+                  "key": "life_cycle_status",
+                  "value": "DEPRECIATED",
+                  "description": "Estado en el ciclo de vida: AVAILABLE, DEPRECIATED, ASSIGNED (opcional)",
+                  "disabled": false
+                },
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Pagina solicitada (opcional, por defecto 1)"
+                },
+                {
+                  "key": "limit",
+                  "value": "10",
+                  "description": "Registros por pagina (opcional, por defecto 20, maximo 100)"
+                }
+              ]
+            },
+            "description": "Consulta los equipos disponibles y su estado en el ciclo de vida (tabla `equipments`).\n\nEndpoint publico: no requiere token.\nCada equipo incluye su `product` y, si ya fue asignado, su `assignment`.\nFiltros opcionales: `product_id`, `life_cycle_status`, `page` y `limit`."
+          },
+          "response": [
+            {
+              "name": "200 OK - Listado paginado de equipos",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/equipments/?product_id=1&life_cycle_status=DEPRECIATED&page=1&limit=10",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "equipments",
+                    ""
+                  ],
+                  "query": [
+                    {
+                      "key": "product_id",
+                      "value": "1",
+                      "description": "Filtro por producto (opcional)",
+                      "disabled": false
+                    },
+                    {
+                      "key": "life_cycle_status",
+                      "value": "DEPRECIATED",
+                      "description": "Estado en el ciclo de vida: AVAILABLE, DEPRECIATED, ASSIGNED (opcional)",
+                      "disabled": false
+                    },
+                    {
+                      "key": "page",
+                      "value": "1",
+                      "description": "Pagina solicitada (opcional, por defecto 1)"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "10",
+                      "description": "Registros por pagina (opcional, por defecto 20, maximo 100)"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Proceso realizado con exito\",\n  \"data\": {\n    \"total\": 1,\n    \"page\": 1,\n    \"limit\": 10,\n    \"total_pages\": 1,\n    \"items\": [\n      {\n        \"equipment_id\": 1,\n        \"product_id\": 1,\n        \"load_id\": 1,\n        \"serial_number\": \"SCNU9423FMQ\",\n        \"acquisition_date\": \"2021-01-01\",\n        \"end_of_useful_life\": \"2021-01-01\",\n        \"current_market_value\": \"0.00\",\n        \"life_cycle_status\": \"DEPRECIATED\",\n        \"created_at\": \"2026-09-19T06:57:17.000Z\",\n        \"updated_at\": \"2026-09-19T06:57:17.000Z\",\n        \"product\": {\n          \"product_id\": 1,\n          \"product_code\": \"5100021518\",\n          \"name\": \"COMPUTADORA PORTATIL MOD NB HP ProBook 4410s CONFIG INTEL CORE2DUO T6570 ...\",\n          \"category\": \"EQUIPMENT\",\n          \"url_image\": null\n        },\n        \"assignment\": null\n      }\n    ]\n  }\n}"
+            },
+            {
+              "name": "200 OK - Equipo ya asignado a una solicitud",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/equipments/?life_cycle_status=ASSIGNED",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "equipments",
+                    ""
+                  ],
+                  "query": [
+                    {
+                      "key": "life_cycle_status",
+                      "value": "ASSIGNED",
+                      "description": "Equipos ya entregados"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Proceso realizado con exito\",\n  \"data\": {\n    \"total\": 1,\n    \"page\": 1,\n    \"limit\": 20,\n    \"total_pages\": 1,\n    \"items\": [\n      {\n        \"equipment_id\": 15,\n        \"product_id\": 1,\n        \"load_id\": 1,\n        \"serial_number\": \"SCNU9423FMQ\",\n        \"acquisition_date\": \"2021-01-01\",\n        \"end_of_useful_life\": \"2021-01-01\",\n        \"current_market_value\": \"0.00\",\n        \"life_cycle_status\": \"ASSIGNED\",\n        \"created_at\": \"2026-09-19T06:57:17.000Z\",\n        \"updated_at\": \"2026-09-22T09:15:00.000Z\",\n        \"product\": {\n          \"product_id\": 1,\n          \"product_code\": \"5100021518\",\n          \"name\": \"COMPUTADORA PORTATIL MOD NB HP ProBook 4410s CONFIG INTEL CORE2DUO T6570 ...\",\n          \"category\": \"EQUIPMENT\",\n          \"url_image\": null\n        },\n        \"assignment\": {\n          \"assignment_id\": 3,\n          \"delivery_date\": \"2026-09-22\",\n          \"donation_deed_ref\": \"ACTA-2026-0003\"\n        }\n      }\n    ]\n  }\n}"
+            },
+            {
+              "name": "403 Forbidden - product_id no numerico",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{base_url}}/equipments/?product_id=abc",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "equipments",
+                    ""
+                  ],
+                  "query": [
+                    {
+                      "key": "product_id",
+                      "value": "abc",
+                      "description": "Debe ser entero"
+                    }
+                  ]
+                }
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"errors\": [\n    {\n      \"type\": \"field\",\n      \"value\": \"abc\",\n      \"msg\": \"El identificador del producto no es valido\",\n      \"path\": \"product_id\",\n      \"location\": \"query\"\n    }\n  ]\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "4. Solicitudes de Donacion (Donation Requests)",
+      "description": "Creacion de solicitudes de donacion o convenio y panel de seguimiento de la entidad.",
+      "item": [
+        {
+          "name": "POST /donation-requests/ - Crear solicitud de donacion o convenio",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Responde 201 Created\", function () {",
+                  "    pm.response.to.have.status(201);",
+                  "});",
+                  "// Guarda el request_id de la solicitud creada",
+                  "if (pm.response.code === 201) {",
+                  "    const json = pm.response.json();",
+                  "    pm.test(\"La solicitud arranca en estado ON_HOLD\", function () {",
+                  "        pm.expect(json.data.request_status).to.eql(\"ON_HOLD\");",
+                  "    });",
+                  "    pm.collectionVariables.set(\"request_id\", String(json.data.request_id));",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{bearer_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"request_type\": \"DONATION\",\n  \"requested_quantity\": 3,\n  \"need_description\": \"Solicitamos 3 computadoras portatiles para el laboratorio de informatica de la sede Lima.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/donation-requests/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "donation-requests",
+                ""
+              ]
+            },
+            "description": "Permite a la entidad crear una solicitud de donacion o convenio.\n\nEl `entity_id` se toma de la sesion y el estado inicial siempre es `ON_HOLD`.\nEnviar `entity_id` o `request_status` en el body devuelve 403.\nEl `request_id` resultante se guarda automaticamente en la variable `request_id`."
+          },
+          "response": [
+            {
+              "name": "201 Created - Solicitud registrada en ON_HOLD",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{bearer_token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"request_type\": \"DONATION\",\n  \"requested_quantity\": 3,\n  \"need_description\": \"Solicitamos 3 computadoras portatiles para el laboratorio de informatica de la sede Lima.\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}/donation-requests/",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "donation-requests",
+                    ""
+                  ]
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Proceso realizado con exito\",\n  \"data\": {\n    \"request_id\": 21,\n    \"entity_id\": 7,\n    \"request_type\": \"DONATION\",\n    \"request_date\": \"2026-09-25T14:20:44.000Z\",\n    \"requested_quantity\": 3,\n    \"need_description\": \"Solicitamos 3 computadoras portatiles para el laboratorio de informatica de la sede Lima.\",\n    \"request_status\": \"ON_HOLD\"\n  }\n}"
+            },
+            {
+              "name": "403 Forbidden - requested_quantity invalido",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{bearer_token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"request_type\": \"DONATION\",\n  \"requested_quantity\": 0,\n  \"need_description\": \"Equipos\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}/donation-requests/",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "donation-requests",
+                    ""
+                  ]
+                }
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"errors\": [\n    {\n      \"type\": \"field\",\n      \"value\": \"0\",\n      \"msg\": \"La cantidad solicitada debe ser un entero mayor a cero\",\n      \"path\": \"requested_quantity\",\n      \"location\": \"body\"\n    }\n  ]\n}"
+            },
+            {
+              "name": "403 Forbidden - request_status no permitido en el body",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{bearer_token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"request_type\": \"DONATION\",\n  \"requested_quantity\": 3,\n  \"need_description\": \"Equipos\",\n  \"request_status\": \"APPROVED\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}/donation-requests/",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "donation-requests",
+                    ""
+                  ]
+                }
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"errors\": [\n    {\n      \"type\": \"field\",\n      \"value\": \"APPROVED\",\n      \"msg\": \"El estado de la solicitud no puede ser modificado desde este endpoint\",\n      \"path\": \"request_status\",\n      \"location\": \"body\"\n    }\n  ]\n}"
+            },
+            {
+              "name": "404 Not Found - El usuario no tiene entidad registrada",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{bearer_token}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"request_type\": \"DONATION\",\n  \"requested_quantity\": 3,\n  \"need_description\": \"Solicitamos 3 computadoras portatiles para el laboratorio de informatica de la sede Lima.\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}/donation-requests/",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "donation-requests",
+                    ""
+                  ]
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"error\": \"ENTITY_NOT_FOUND\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /donation-requests/ - Dashboard de seguimiento",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Responde 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "const json = pm.response.json();",
+                  "pm.test(\"Respuesta paginada con metadata e items\", function () {",
+                  "    pm.expect(json.data).to.have.property(\"total\");",
+                  "    pm.expect(json.data).to.have.property(\"page\");",
+                  "    pm.expect(json.data).to.have.property(\"limit\");",
+                  "    pm.expect(json.data).to.have.property(\"total_pages\");",
+                  "    pm.expect(json.data.items).to.be.an(\"array\");",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{bearer_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/donation-requests/?request_status=ON_HOLD&request_type=DONATION&page=1&limit=20",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "donation-requests",
+                ""
+              ],
+              "query": [
+                {
+                  "key": "request_status",
+                  "value": "ON_HOLD",
+                  "description": "Filtro por estado: ON_HOLD, APPROVED, REJECTED, DELIVERED (opcional)",
+                  "disabled": false
+                },
+                {
+                  "key": "request_type",
+                  "value": "DONATION",
+                  "description": "Filtro por tipo de solicitud (opcional)"
+                },
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Pagina solicitada (opcional, por defecto 1)"
+                },
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "description": "Registros por pagina (opcional, por defecto 20, maximo 100)"
+                }
+              ]
+            },
+            "description": "Lista el historial de solicitudes de la entidad autenticada con filtro opcional por `request_status`.\n\nSolo devuelve las solicitudes de la entidad del token.\nFiltros opcionales: `request_status`, `request_type`, `page` y `limit`."
+          },
+          "response": [
+            {
+              "name": "200 OK - Historial de solicitudes de la entidad",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{bearer_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/donation-requests/?request_status=ON_HOLD&request_type=DONATION&page=1&limit=20",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "donation-requests",
+                    ""
+                  ],
+                  "query": [
+                    {
+                      "key": "request_status",
+                      "value": "ON_HOLD",
+                      "description": "Filtro por estado: ON_HOLD, APPROVED, REJECTED, DELIVERED (opcional)",
+                      "disabled": false
+                    },
+                    {
+                      "key": "request_type",
+                      "value": "DONATION",
+                      "description": "Filtro por tipo de solicitud (opcional)"
+                    },
+                    {
+                      "key": "page",
+                      "value": "1",
+                      "description": "Pagina solicitada (opcional, por defecto 1)"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "20",
+                      "description": "Registros por pagina (opcional, por defecto 20, maximo 100)"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Proceso realizado con exito\",\n  \"data\": {\n    \"total\": 2,\n    \"page\": 1,\n    \"limit\": 20,\n    \"total_pages\": 1,\n    \"items\": [\n      {\n        \"request_id\": 21,\n        \"entity_id\": 7,\n        \"request_type\": \"DONATION\",\n        \"request_date\": \"2026-09-25T14:20:44.000Z\",\n        \"requested_quantity\": 3,\n        \"need_description\": \"Solicitamos 3 computadoras portatiles para el laboratorio de informatica de la sede Lima.\",\n        \"request_status\": \"ON_HOLD\"\n      },\n      {\n        \"request_id\": 18,\n        \"entity_id\": 7,\n        \"request_type\": \"AGREEMENT\",\n        \"request_date\": \"2026-09-12T10:05:00.000Z\",\n        \"requested_quantity\": 1,\n        \"need_description\": \"Convenio para el equipamiento del aula de capacitacion.\",\n        \"request_status\": \"ON_HOLD\"\n      }\n    ]\n  }\n}"
+            },
+            {
+              "name": "200 OK - Sin solicitudes para el filtro aplicado",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{bearer_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/donation-requests/?request_status=APPROVED",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "donation-requests",
+                    ""
+                  ],
+                  "query": [
+                    {
+                      "key": "request_status",
+                      "value": "APPROVED",
+                      "description": "Sin solicitudes aprobadas"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Proceso realizado con exito\",\n  \"data\": {\n    \"total\": 0,\n    \"page\": 1,\n    \"limit\": 20,\n    \"total_pages\": 0,\n    \"items\": []\n  }\n}"
+            },
+            {
+              "name": "401 Unauthorized - Token ausente",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{bearer_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/donation-requests/",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "donation-requests",
+                    ""
+                  ]
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"error\": \"ERROR_NO_EXISTS_TOKEN\"\n}"
+            },
+            {
+              "name": "404 Not Found - El usuario no tiene entidad registrada",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{bearer_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/donation-requests/",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "donation-requests",
+                    ""
+                  ]
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"error\": \"ENTITY_NOT_FOUND\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /donation-requests/{{request_id}} - Detalle de la solicitud",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Responde 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{bearer_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/donation-requests/{{request_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "donation-requests",
+                "{{request_id}}"
+              ]
+            },
+            "description": "Devuelve el detalle de una solicitud especifica de la entidad autenticada.\n\nIncluye el arreglo `assignments` con las asignaciones ya generadas para la solicitud.\nUna solicitud de otra entidad o inexistente responde 404 `REQUEST_NOT_FOUND`."
+          },
+          "response": [
+            {
+              "name": "200 OK - Detalle de la solicitud y sus asignaciones",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{bearer_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/donation-requests/{{request_id}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "donation-requests",
+                    "{{request_id}}"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Proceso realizado con exito\",\n  \"data\": {\n    \"request_id\": 21,\n    \"entity_id\": 7,\n    \"request_type\": \"DONATION\",\n    \"request_date\": \"2026-09-25T14:20:44.000Z\",\n    \"requested_quantity\": 3,\n    \"need_description\": \"Solicitamos 3 computadoras portatiles para el laboratorio de informatica de la sede Lima.\",\n    \"request_status\": \"ON_HOLD\",\n    \"assignments\": [\n      {\n        \"assignment_id\": 3,\n        \"request_id\": 21,\n        \"equipment_id\": 15,\n        \"delivery_date\": \"2026-09-22\",\n        \"donation_deed_ref\": \"ACTA-2026-0003\",\n        \"estimated_beneficiaries_impact\": 120,\n        \"equipment\": {\n          \"equipment_id\": 15,\n          \"product_id\": 1,\n          \"load_id\": 1,\n          \"serial_number\": \"SCNU9423FMQ\",\n          \"acquisition_date\": \"2021-01-01\",\n          \"end_of_useful_life\": \"2021-01-01\",\n          \"current_market_value\": \"0.00\",\n          \"life_cycle_status\": \"ASSIGNED\",\n          \"created_at\": \"2026-09-19T06:57:17.000Z\",\n          \"updated_at\": \"2026-09-22T09:15:00.000Z\",\n          \"product\": {\n            \"product_id\": 1,\n            \"product_code\": \"5100021518\",\n            \"name\": \"COMPUTADORA PORTATIL MOD NB HP ProBook 4410s CONFIG INTEL CORE2DUO T6570 ...\",\n            \"category\": \"EQUIPMENT\",\n            \"url_image\": null\n          }\n        }\n      }\n    ]\n  }\n}"
+            },
+            {
+              "name": "200 OK - Solicitud sin asignaciones todavia",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{bearer_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/donation-requests/{{request_id}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "donation-requests",
+                    "{{request_id}}"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Proceso realizado con exito\",\n  \"data\": {\n    \"request_id\": 21,\n    \"entity_id\": 7,\n    \"request_type\": \"DONATION\",\n    \"request_date\": \"2026-09-25T14:20:44.000Z\",\n    \"requested_quantity\": 3,\n    \"need_description\": \"Solicitamos 3 computadoras portatiles para el laboratorio de informatica de la sede Lima.\",\n    \"request_status\": \"ON_HOLD\",\n    \"assignments\": []\n  }\n}"
+            },
+            {
+              "name": "404 Not Found - Solicitud inexistente o de otra entidad",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{bearer_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/donation-requests/{{request_id}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "donation-requests",
+                    "{{request_id}}"
+                  ]
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"status\": \"error\",\n  \"message\": \"Ocurrio un problema\",\n  \"data\": \"REQUEST_NOT_FOUND\"\n}"
+            },
+            {
+              "name": "403 Forbidden - request_id no numerico",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{bearer_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/donation-requests/abc",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "donation-requests",
+                    "abc"
+                  ]
+                }
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"errors\": [\n    {\n      \"type\": \"field\",\n      \"value\": \"abc\",\n      \"msg\": \"El identificador de la solicitud no es valido\",\n      \"path\": \"request_id\",\n      \"location\": \"params\"\n    }\n  ]\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "5. Asignaciones (Donation Assignments)",
+      "description": "Gestion de convenios y asignaciones de equipos aprobadas para la entidad.",
+      "item": [
+        {
+          "name": "GET /donation-assignments/ - Convenios y asignaciones aprobadas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Responde 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "const json = pm.response.json();",
+                  "pm.test(\"Respuesta paginada con metadata e items\", function () {",
+                  "    pm.expect(json.data).to.have.property(\"total\");",
+                  "    pm.expect(json.data).to.have.property(\"page\");",
+                  "    pm.expect(json.data).to.have.property(\"limit\");",
+                  "    pm.expect(json.data).to.have.property(\"total_pages\");",
+                  "    pm.expect(json.data.items).to.be.an(\"array\");",
+                  "});",
+                  "// Si la entidad ya tiene asignaciones, guarda la primera para consultar su detalle",
+                  "if (pm.response.code === 200) {",
+                  "    const json = pm.response.json();",
+                  "    if (json.data && json.data.items && json.data.items.length > 0) {",
+                  "        pm.collectionVariables.set(\"assignment_id\", String(json.data.items[0].assignment_id));",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{bearer_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/donation-assignments/?request_id={{request_id}}&page=1&limit=20",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "donation-assignments",
+                ""
+              ],
+              "query": [
+                {
+                  "key": "request_id",
+                  "value": "{{request_id}}",
+                  "description": "Filtro por solicitud (opcional)"
+                },
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Pagina solicitada (opcional, por defecto 1)"
+                },
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "description": "Registros por pagina (opcional, por defecto 20, maximo 100)"
+                }
+              ]
+            },
+            "description": "Consulta las asignaciones de equipos concretadas para las solicitudes de la entidad en sesion.\n\nSolo devuelve asignaciones cuyo `request` pertenece a la entidad del token.\nFiltros opcionales: `request_id`, `page` y `limit`.\nSi la entidad ya tiene asignaciones, la primera se guarda automaticamente en la variable `assignment_id`."
+          },
+          "response": [
+            {
+              "name": "200 OK - Asignaciones de la entidad",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{bearer_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/donation-assignments/",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "donation-assignments",
+                    ""
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Proceso realizado con exito\",\n  \"data\": {\n    \"total\": 1,\n    \"page\": 1,\n    \"limit\": 20,\n    \"total_pages\": 1,\n    \"items\": [\n      {\n        \"assignment_id\": 3,\n        \"request_id\": 21,\n        \"equipment_id\": 15,\n        \"delivery_date\": \"2026-09-22\",\n        \"donation_deed_ref\": \"ACTA-2026-0003\",\n        \"estimated_beneficiaries_impact\": 120,\n        \"request\": {\n          \"request_id\": 21,\n          \"entity_id\": 7,\n          \"request_type\": \"DONATION\",\n          \"request_date\": \"2026-09-25T14:20:44.000Z\",\n          \"requested_quantity\": 3,\n          \"need_description\": \"Solicitamos 3 computadoras portatiles para el laboratorio de informatica de la sede Lima.\",\n          \"request_status\": \"APPROVED\"\n        },\n        \"equipment\": {\n          \"equipment_id\": 15,\n          \"product_id\": 1,\n          \"load_id\": 1,\n          \"serial_number\": \"SCNU9423FMQ\",\n          \"acquisition_date\": \"2021-01-01\",\n          \"end_of_useful_life\": \"2021-01-01\",\n          \"current_market_value\": \"0.00\",\n          \"life_cycle_status\": \"ASSIGNED\",\n          \"created_at\": \"2026-09-19T06:57:17.000Z\",\n          \"updated_at\": \"2026-09-22T09:15:00.000Z\",\n          \"product\": {\n            \"product_id\": 1,\n            \"product_code\": \"5100021518\",\n            \"name\": \"COMPUTADORA PORTATIL MOD NB HP ProBook 4410s CONFIG INTEL CORE2DUO T6570 ...\",\n            \"category\": \"EQUIPMENT\",\n            \"url_image\": null\n          }\n        }\n      }\n    ]\n  }\n}"
+            },
+            {
+              "name": "200 OK - La entidad todavia no tiene asignaciones",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{bearer_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/donation-assignments/",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "donation-assignments",
+                    ""
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Proceso realizado con exito\",\n  \"data\": {\n    \"total\": 0,\n    \"page\": 1,\n    \"limit\": 20,\n    \"total_pages\": 0,\n    \"items\": []\n  }\n}"
+            },
+            {
+              "name": "401 Unauthorized - Token ausente",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{bearer_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/donation-assignments/",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "donation-assignments",
+                    ""
+                  ]
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"error\": \"ERROR_NO_EXISTS_TOKEN\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /donation-assignments/{{assignment_id}} - Detalle de la asignacion",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test(\"Responde 200 OK\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "// Guarda el assignment_id de la asignacion consultada",
+                  "if (pm.response.code === 200) {",
+                  "    const json = pm.response.json();",
+                  "    if (json.data && json.data.assignment_id) {",
+                  "        pm.collectionVariables.set(\"assignment_id\", String(json.data.assignment_id));",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{bearer_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/donation-assignments/{{assignment_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "donation-assignments",
+                "{{assignment_id}}"
+              ]
+            },
+            "description": "Devuelve el detalle de la asignacion con la solicitud y los equipos vinculados.\n\nLa variable `assignment_id` se llena desde el listado de asignaciones.\nUna asignacion de otra entidad o inexistente responde 404 `ASSIGNMENT_NOT_FOUND`,\npor eso si la entidad aun no tiene asignaciones esta consulta devuelve 404."
+          },
+          "response": [
+            {
+              "name": "200 OK - Detalle de la asignacion y equipos vinculados",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{bearer_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/donation-assignments/{{assignment_id}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "donation-assignments",
+                    "{{assignment_id}}"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"status\": \"success\",\n  \"message\": \"Proceso realizado con exito\",\n  \"data\": {\n    \"assignment_id\": 3,\n    \"request_id\": 21,\n    \"equipment_id\": 15,\n    \"delivery_date\": \"2026-09-22\",\n    \"donation_deed_ref\": \"ACTA-2026-0003\",\n    \"estimated_beneficiaries_impact\": 120,\n    \"request\": {\n      \"request_id\": 21,\n      \"entity_id\": 7,\n      \"request_type\": \"DONATION\",\n      \"request_date\": \"2026-09-25T14:20:44.000Z\",\n      \"requested_quantity\": 3,\n      \"need_description\": \"Solicitamos 3 computadoras portatiles para el laboratorio de informatica de la sede Lima.\",\n      \"request_status\": \"APPROVED\"\n    },\n    \"equipment\": {\n      \"equipment_id\": 15,\n      \"product_id\": 1,\n      \"load_id\": 1,\n      \"serial_number\": \"SCNU9423FMQ\",\n      \"acquisition_date\": \"2021-01-01\",\n      \"end_of_useful_life\": \"2021-01-01\",\n      \"current_market_value\": \"0.00\",\n      \"life_cycle_status\": \"ASSIGNED\",\n      \"created_at\": \"2026-09-19T06:57:17.000Z\",\n      \"updated_at\": \"2026-09-22T09:15:00.000Z\",\n      \"product\": {\n        \"product_id\": 1,\n        \"product_code\": \"5100021518\",\n        \"name\": \"COMPUTADORA PORTATIL MOD NB HP ProBook 4410s CONFIG INTEL CORE2DUO T6570 ...\",\n        \"category\": \"EQUIPMENT\",\n        \"url_image\": null\n      }\n    }\n  }\n}"
+            },
+            {
+              "name": "404 Not Found - Asignacion inexistente o de otra entidad",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{bearer_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/donation-assignments/{{assignment_id}}",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "donation-assignments",
+                    "{{assignment_id}}"
+                  ]
+                }
+              },
+              "status": "Not Found",
+              "code": 404,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"status\": \"error\",\n  \"message\": \"Ocurrio un problema\",\n  \"data\": \"ASSIGNMENT_NOT_FOUND\"\n}"
+            },
+            {
+              "name": "403 Forbidden - assignment_id no numerico",
+              "originalRequest": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{bearer_token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/donation-assignments/abc",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "donation-assignments",
+                    "abc"
+                  ]
+                }
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"errors\": [\n    {\n      \"type\": \"field\",\n      \"value\": \"abc\",\n      \"msg\": \"El identificador de la asignacion no es valido\",\n      \"path\": \"assignment_id\",\n      \"location\": \"params\"\n    }\n  ]\n}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

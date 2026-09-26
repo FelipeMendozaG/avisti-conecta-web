@@ -1,0 +1,63 @@
+<footer class="border-t border-slate-200 bg-white">
+  <div class="mx-auto grid max-w-7xl gap-10 px-4 py-12 sm:grid-cols-2 sm:px-6 lg:grid-cols-4 lg:px-8">
+    <div class="sm:col-span-2 lg:col-span-1">
+      <app-brand />
+      <p class="mt-4 max-w-xs text-sm leading-relaxed text-slate-500">
+        Conectamos donaciones de equipos y productos con entidades que generan impacto social en el
+        Perú.
+      </p>
+    </div>
+
+    <div>
+      <h3 class="text-sm font-semibold text-slate-900">Plataforma</h3>
+      <ul class="mt-4 space-y-2.5 text-sm text-slate-500">
+        <li>
+          <a routerLink="/catalogo" class="transition hover:text-emerald-700">Catálogo</a>
+        </li>
+        <li>
+          <a routerLink="/" fragment="como-funciona" class="transition hover:text-emerald-700"
+            >Cómo funciona</a
+          >
+        </li>
+        <li>
+          <a routerLink="/registro" class="transition hover:text-emerald-700"
+            >Registro de entidades</a
+          >
+        </li>
+      </ul>
+    </div>
+
+    <div>
+      <h3 class="text-sm font-semibold text-slate-900">Cuenta</h3>
+      <ul class="mt-4 space-y-2.5 text-sm text-slate-500">
+        <li>
+          <a routerLink="/ingresar" class="transition hover:text-emerald-700">Iniciar sesión</a>
+        </li>
+        <li>
+          <a routerLink="/registro" class="transition hover:text-emerald-700">Crear cuenta</a>
+        </li>
+        <li>
+          <a routerLink="/panel" class="transition hover:text-emerald-700">Mi panel</a>
+        </li>
+      </ul>
+    </div>
+
+    <div>
+      <h3 class="text-sm font-semibold text-slate-900">Contacto</h3>
+      <ul class="mt-4 space-y-2.5 text-sm text-slate-500">
+        <li>Lima, Perú</li>
+        <li>contacto@avisticonnect.org</li>
+        <li>+51 999 888 777</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="border-t border-slate-100">
+    <div
+      class="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 px-4 py-5 text-xs text-slate-400 sm:flex-row sm:px-6 lg:px-8"
+    >
+      <p>© {{ year }} Avisti Connect. Todos los derechos reservados.</p>
+      <p>Impacto social que conecta</p>
+    </div>
+  </div>
+</footer>
